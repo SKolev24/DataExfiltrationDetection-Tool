@@ -21,7 +21,7 @@ if __name__ == "__main__":
                         "--import-pcap",
                         "--import" ,
                         help="Analyse specified pcap files",
-                       nargs=1,)
+                       )
 
     parser.add_argument("-s",
                         "--silent",

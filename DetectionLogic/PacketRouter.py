@@ -7,15 +7,16 @@ from scapy.utils import wrpcap
 from DetectionLogic.SpecificDetect.DNSrules import dns_analysis_chain
 from scapy.utils import PcapReader
 
+console = console.Console()
 _timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 _timestamp = _timestamp.replace(":", ".")
-console = console.Console()
 logDIR = f"logs/{_timestamp}"
-os.makedirs(logDIR, exist_ok=True)
+
 pcap_file = f"{logDIR}/packet.pcap"
 
 
 def process_packet(packet,arg_silent,arg_log):
+
     domain = None
     s_port = None
     d_port = None
@@ -23,6 +24,7 @@ def process_packet(packet,arg_silent,arg_log):
     dst = None
 
     if arg_log:
+        os.makedirs(logDIR, exist_ok=True)
         wrpcap(f"{logDIR}/packet.pcap", packet, append=True)
 
     if packet.haslayer(IP):
