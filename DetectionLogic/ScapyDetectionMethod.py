@@ -5,4 +5,4 @@ from DetectionLogic.PacketRouter import *
 
 def sniff_packet(interface, args_silent):
     print(f"Listening on {interface}: ")
-    sniff(iface=interface, prn=process_packet)
+    sniff(iface=interface, prn=lambda pkt: process_packet(pkt,args_silent))
