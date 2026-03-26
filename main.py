@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.silent and not args.live_capture or not args.import_pcap:
+    if args.silent and not args.live_capture or args.silent and not args.import_pcap:
         parser.error("-s/--silent can only be used in combination with -l/--live-capture or -p/--import_pcap")
 
     if args.live_capture:
