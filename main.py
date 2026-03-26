@@ -10,6 +10,7 @@ if __name__ == "__main__":
                                      description="Usage: e.g. 1: python3 main.py -i <pcap_file> "
                                                  "\n e.g. 2: python3 main.py -l")
     group = parser.add_mutually_exclusive_group(required=True)
+
     group.add_argument("-l",
                         "--live-capture",
                         "--live" ,
@@ -27,16 +28,21 @@ if __name__ == "__main__":
                         help="Filter output to show results only",
                         action="store_true")
 
+    parser.add_argument("-L",
+                        "--log",
+                        help="FOR LIVE CAPTURE: Enable PCAP logging of capture lifetime",
+                        action="store_true")
+
     args = parser.parse_args()
 
-    if args.silent and not args.live_capture or args.silent and not args.import_pcap:
+    if args.silent and not (args.live_capture or args.import_pcap):
         parser.error("-s/--silent can only be used in combination with -l/--live-capture or -p/--import_pcap")
 
     if args.live_capture:
         find_network_interface()
         console.print("choose interface:")
         chosenInterface = input()
-        sniff_packet(chosenInterface,args.silent)
+        sniff_packet(chosenInterface,args.silent,args.log)
 
     if args.import_pcap:
         from DetectionLogic.PacketRouter import file_analysis
