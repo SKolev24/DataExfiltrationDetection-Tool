@@ -10,5 +10,3 @@ def find_network_interface():
             continue
     print(available_networks)
     return available_networks
-
-find_network_interface()
