@@ -10,11 +10,10 @@ console = console.Console()
 _timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 _timestamp = _timestamp.replace(":", ".")
 logDIR = f"logs/{_timestamp}"
-
 pcap_file = f"{logDIR}/packet.pcap"
 
 
-def process_packet(packet,arg_silent,arg_log):
+def process_packet(packet,arg_silent,arg_log, arg_import):
 
     domain = None
     s_port = None
@@ -22,7 +21,7 @@ def process_packet(packet,arg_silent,arg_log):
     src = None
     dst = None
 
-    if arg_log:
+    if arg_log and not arg_import:
         os.makedirs(logDIR, exist_ok=True)
         wrpcap(f"{logDIR}/packet.pcap", packet, append=True)
 
@@ -54,9 +53,10 @@ def process_packet(packet,arg_silent,arg_log):
         print(data)
 
     if packet.haslayer(DNS) and packet[DNS].qd:
-        dns_analysis_chain(packet,domain,arg_silent)
+        dns_analysis_chain(packet,domain,arg_log)
+
         #--------------------- NEED HTTP AND FTB LOGIC HERE -----------------------------------
-def file_analysis(pcap, arg_silent):
+def file_analysis(pcap, arg_silent, arg_log , arg_import):
     for packet in PcapReader(pcap):
-        process_packet(packet,arg_silent,False)
+        process_packet(packet,arg_silent,arg_log, arg_import)
 

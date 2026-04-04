@@ -30,7 +30,8 @@ if __name__ == "__main__":
 
     parser.add_argument("-L",
                         "--log",
-                        help="FOR LIVE CAPTURE: Enable PCAP logging of capture lifetime",
+                        help="FOR LIVE CAPTURE: Enable PCAP logging of capture lifetime"
+                            "FOR IMPORTING: Results get saved in pcap",
                         action="store_true")
 
     args = parser.parse_args()
@@ -45,7 +46,8 @@ if __name__ == "__main__":
         sniff_packet(chosenInterface,args.silent,args.log)
 
     if args.import_pcap:
+        arg_imp = True
         from DetectionLogic.PacketRouter import file_analysis
-        file_analysis(args.import_pcap,args.silent)
+        file_analysis(args.import_pcap,args.silent, args.log, arg_imp)
 
 
