@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="14841e06-25cc-4435-a65f-9d0574d63698" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Aesthetics/Titles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Aesthetics/Title_randomisation.py" beforeDir="false" afterPath="$PROJECT_DIR$/Aesthetics/Title_randomisation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Aesthetics/Titles.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +57,7 @@
       <updated>1775317925067</updated>
       <workItem from="1775317926881" duration="1457000" />
       <workItem from="1775319414174" duration="21000" />
-      <workItem from="1775325480870" duration="1110000" />
+      <workItem from="1775325480870" duration="1230000" />
     </task>
     <servers />
   </component>
