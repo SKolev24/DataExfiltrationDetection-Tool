@@ -1,11 +1,13 @@
+import random
 from rich.console import Console
 import argparse
-
+from Aesthetics import Title_randomisation
 if __name__ == "__main__":
+
     console = Console()
     from DetectionLogic.ScapyDetectionMethod import sniff_packet
     from Util.FindNetworkInterfaces import find_network_interface
-
+    Title_randomisation.banner()
     parser = argparse.ArgumentParser(prog="Data Exfiltration Detector",
                                      description="Usage: e.g. 1: python3 main.py -i <pcap_file> "
                                                  "\n e.g. 2: python3 main.py -l")
@@ -31,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument("-L",
                         "--log",
                         help="FOR LIVE CAPTURE: Enable PCAP logging of capture lifetime"
-                            "FOR IMPORTING: Results get saved in pcap",
+                            "\n FOR IMPORTING: Results get saved in pcap",
                         action="store_true")
 
     args = parser.parse_args()
