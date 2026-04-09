@@ -21,9 +21,9 @@ def icmp_analysis_chain(packet, silent):
 
     key = (src, dst)
 
-    # -------------------------
-    # Payload preview (for demo visibility)
-    # -------------------------
+
+    # Payload preview
+
     preview = payload[:40]
     try:
         preview_text = preview.decode("utf-8", errors="ignore")
@@ -35,9 +35,9 @@ def icmp_analysis_chain(packet, silent):
         if preview_text:
             print(f"[dim]Payload:[/dim] {preview_text}")
 
-    # -------------------------
+
     # Calculate entropy (detects hidden/encoded data)
-    # -------------------------
+
     entropy = calculate_entropy(payload)
 
     # Track total data sent (detects slow exfiltration)
