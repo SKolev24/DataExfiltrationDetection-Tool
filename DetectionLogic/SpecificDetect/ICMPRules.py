@@ -1,107 +1,83 @@
 from scapy.layers.inet import ICMP, IP
 from rich import print
-import re
+import math
 
-icmp_counter = {}
-size_tracker = {}
-
-ICMP_TYPES = {
-    0: "Echo Reply",
-    3: "Destination Unreachable",
-    5: "Redirect",
-    8: "Echo Request",
-    11: "Time Exceeded",
-    13: "Timestamp Request",
-    14: "Timestamp Reply",
-    17: "Address Mask Request",
-    18: "Address Mask Reply"
-}
+data_volume = {}
+payload_tracker = {}
 
 def icmp_analysis_chain(packet, silent):
 
     if not packet.haslayer(ICMP) or not packet.haslayer(IP):
         return
 
+    if packet[ICMP].type != 8:
+        return
+
     src = packet[IP].src
     dst = packet[IP].dst
     payload = bytes(packet[ICMP].payload)
     size = len(payload)
-    icmp_type = packet[ICMP].type
-    packet_length = len(packet)
 
-    type_name = ICMP_TYPES.get(icmp_type, "Unknown")
+    key = (src, dst)
 
-    # Short payload preview
-    preview = payload[:30]
+    # Payload Preview
+    preview = payload[:40]
     try:
         preview_text = preview.decode("utf-8", errors="ignore")
     except:
         preview_text = str(preview)
 
     if not silent:
-        print(f"[blue]ICMP Packet[/blue] | {src} → {dst} | Type: {icmp_type} ({type_name}) | Size: {packet_length}")
+        print(f"[blue]ICMP[/blue] {src} → {dst} | Size: {len(packet)}")
         if preview_text:
-            print(f"[dim]Payload preview:[/dim] {preview_text}")
+            print(f"[dim]Payload:[/dim] {preview_text}")
 
 
-    # Rule 1: High confidence
 
-    if size > 100 and looks_encoded(payload):
+    entropy = calculate_entropy(payload)
+
+    # Track total data volume
+    data_volume[key] = data_volume.get(key, 0) + size
+
+    # Track payload variability
+    if key not in payload_tracker:
+        payload_tracker[key] = set()
+    payload_tracker[key].add(payload)
+
+
+    # Detection logic
+
+    # High confidence exfiltration
+    if size > 100 and (entropy > 4.5):
         if not silent:
-            print("[red]High confidence ICMP exfiltration detected[/red]")
+            print("[red]ICMP Exfiltration Detected[/red]")
 
-
-    # Rule 2: Large payload
-
-    elif size > 100:
+    # Slow exfiltration (total data)
+    elif data_volume[key] > 1000:
         if not silent:
-            print(f"[yellow]Large ICMP payload detected: {size} bytes[/yellow]")
+            print(f"[yellow]High data transfer over ICMP from {src}[/yellow]")
 
-
-    # Rule 3: Encoded payload
-
-    elif looks_encoded(payload):
+    # Chunked exfiltration (many different payloads)
+    elif len(payload_tracker[key]) > 10:
         if not silent:
-            print("[yellow]Possible encoded ICMP payload[/yellow]")
+            print(f"[yellow]Multiple unique ICMP payloads from {src}[/yellow]")
 
-
-    # Rule 4: High frequency
-
-    icmp_counter[src] = icmp_counter.get(src, 0) + 1
-    if icmp_counter[src] > 20:
+    elif entropy > 4.5:
         if not silent:
-            print(f"[yellow]High ICMP activity from {src}[/yellow]")
+            print("[yellow]High entropy ICMP payload[/yellow]")
 
 
-    # Rule 5: Repeated size
+def calculate_entropy(data):
+    if not data:
+        return 0
 
-    key = (src, size)
-    size_tracker[key] = size_tracker.get(key, 0) + 1
-    if size_tracker[key] > 10:
-        if not silent:
-            print(f"[yellow]Repeated ICMP packet size {size} from {src}[/yellow]")
+    freq = {}
+    for byte in data:
+        freq[byte] = freq.get(byte, 0) + 1
 
+    entropy = 0
+    for count in freq.values():
+        p = count / len(data)
+        entropy -= p * math.log2(p)
 
-    # Rule 6: Unusual ICMP type
-
-    if icmp_type not in [0, 8]:
-        if not silent:
-            print(f"[yellow]Unusual ICMP type detected: {icmp_type} ({type_name})[/yellow]")
-
-
-def looks_encoded(data):
-    try:
-        text = data.decode("utf-8", errors="ignore").strip()
-
-        if len(text) < 30:
-            return False
-
-        base64_pattern = r'^[A-Za-z0-9+/=]+$'
-
-        if re.fullmatch(base64_pattern, text):
-            return True
-
-    except:
-        pass
-
-    return False
+    return entropy
