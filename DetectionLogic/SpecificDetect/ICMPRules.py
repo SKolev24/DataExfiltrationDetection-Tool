@@ -43,9 +43,8 @@ def icmp_analysis_chain(packet, silent):
     # Track total data sent (detects slow exfiltration)
     data_volume[key] = data_volume.get(key, 0) + size
 
-    # -------------------------
+
     # Detection logic
-    # -------------------------
 
     # High confidence: large + high entropy
     if size > 100 and entropy > 4.5:
