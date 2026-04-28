@@ -1,17 +1,40 @@
 import datetime
 import os
-from rich import print, console
+from rich import console
 from scapy.layers.dns import DNS
 from scapy.layers.inet import IP, UDP, TCP, ICMP
 from scapy.utils import wrpcap
 from DetectionLogic.SpecificDetect.ICMPRules import icmp_analysis_chain
 from DetectionLogic.SpecificDetect.DNSrules import dns_analysis_chain
 from scapy.utils import PcapReader
+
 console = console.Console()
 _timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 _timestamp = _timestamp.replace(":", ".")
 logDIR = f"logs/{_timestamp}"
 pcap_file = f"{logDIR}/packet.pcap"
+
+
+def _format_endpoint(address, port):
+    if not address:
+        return "-"
+    if port is None:
+        return address
+    return f"{address}:{port}"
+
+
+def _packet_type(packet):
+    if packet.haslayer(DNS):
+        return "DNS"
+    if packet.haslayer(ICMP):
+        return "ICMP"
+    return None
+
+
+def _print_packet_row(packet, pkt_type, src, dst, length, domain):
+    timestamp = datetime.datetime.fromtimestamp(float(packet.time)).strftime("%H:%M:%S")
+    detail = f" {domain}" if domain else ""
+    console.print(f"[dim]{timestamp}[/dim] [bold]{pkt_type}[/bold] {src} -> {dst} ({length} B){detail}", soft_wrap=True)
 
 
 def process_packet(packet,arg_silent,arg_log, arg_import):
@@ -43,17 +66,14 @@ def process_packet(packet,arg_silent,arg_log, arg_import):
         except:
             domain = None
 
-    data = {
-        "timestamp": packet.time,
-        "src": f"{src}:{s_port}",
-        "dst": f"{dst}:{d_port}",
-        "length": len(packet),
-        "domain": domain
-    }
-    if not arg_silent:
-        print(data)
+    src_endpoint = _format_endpoint(src, s_port)
+    dst_endpoint = _format_endpoint(dst, d_port)
+    pkt_type = _packet_type(packet)
 
-    if packet.haslayer(DNS) and packet[DNS].qd:
+    if pkt_type and not arg_silent:
+        _print_packet_row(packet, pkt_type, src_endpoint, dst_endpoint, len(packet), domain)
+
+    if packet.haslayer(DNS) and packet[DNS].qd and domain:
         dns_analysis_chain(packet,domain,arg_log)
 
     if packet.haslayer(ICMP):

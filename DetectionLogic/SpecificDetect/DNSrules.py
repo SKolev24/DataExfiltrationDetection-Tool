@@ -75,31 +75,29 @@ def verdict(packet, domain, confidence, entropy, length, freq):
     from DetectionLogic.PacketRouter import logDIR
     #Default variable assignment
     global _l, _e, _f, _arg_log
-    _e_mes = f"[bold white]{entropy}[/bold white]"
+    _e_mes = f"[bold white]{entropy:.2f}[/bold white]"
     _l_mes = f"[bold white]{length}[/bold white]"
     _f_mes = f"[bold white]{freq}[/bold white]"
 
     if _e:
-        _e_mes = f"[bold red]{entropy}[/bold red]"
+        _e_mes = f"[bold red]{entropy:.2f}[/bold red]"
     if _l:
         _l_mes = f"[bold red]{length}[/bold red]"
     if _f:
         _f_mes = f"[bold red]{freq}[/bold red]"
 
-    domain = f"[bold red]{domain}[/bold red]"
+    display_domain = f"[bold red]{domain}[/bold red]"
 
     #Printing Results
     if confidence == 2 and _e:
-        message = (f"Likely Threat: {domain} \n entropy: {_e_mes} \n length: {_l_mes} \n freq: {_f_mes} \n {packet} \n"
-                   f"/n")
+        message = f"[yellow]ALERT DNS[/yellow] likely threat {display_domain} | entropy={_e_mes} length={_l_mes} freq={_f_mes}"
         print(message)
         if _arg_log:
             os.makedirs(logDIR, exist_ok=True)
             wrpcap(f"{logDIR}/DNS_RESULT_packet.pcap", packet, append=True)
 
     elif confidence == 3 and _e:
-        message = (f"[bold red]****[/bold red]THREAT Discovered: {domain} \n entropy: {_e_mes} \n length: {_l_mes} \n freq: {_f_mes} \n {packet} \n"
-                   f"/n")
+        message = f"[bold red]ALERT DNS[/bold red] threat discovered {display_domain} | entropy={_e_mes} length={_l_mes} freq={_f_mes}"
         print(message)
         if _arg_log:
             os.makedirs(logDIR, exist_ok=True)

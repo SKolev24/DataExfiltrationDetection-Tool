@@ -2,12 +2,14 @@ from scapy.layers.inet import ICMP, IP
 from rich import print
 import math
 
-# Tracks total data sent between source and destination
-data_volume = {}
+# Tracks suspicious ICMP activity between source and destination
+SUSPICIOUS_WINDOW_SECONDS = 60
+suspicious_events = {}
+
 
 def icmp_analysis_chain(packet, silent):
 
-    # Only process ICMP Echo Requests (real exfiltration method)
+    # Only process ICMP Echo Requests
     if not packet.haslayer(ICMP) or not packet.haslayer(IP):
         return
 
@@ -21,50 +23,35 @@ def icmp_analysis_chain(packet, silent):
 
     key = (src, dst)
 
-
-    # Payload preview
-
-    preview = payload[:40]
-    try:
-        preview_text = preview.decode("utf-8", errors="ignore")
-    except:
-        preview_text = str(preview)
-
-    if not silent:
-        print(f"[blue]ICMP[/blue] {src} → {dst} | Size: {len(packet)}")
-        if preview_text:
-            print(f"[dim]Payload:[/dim] {preview_text}")
-
-
     # Calculate entropy (detects hidden/encoded data)
-
     entropy = calculate_entropy(payload)
 
-    # Track total data sent (detects slow exfiltration)
-    data_volume[key] = data_volume.get(key, 0) + size
+    preview = payload[:40].decode("utf-8", errors="replace") if payload else "-"
+    high_entropy = entropy > 4.5
+    large_payload = size > 100
 
+    if not high_entropy:
+        return
+
+    now = float(packet.time)
+    events = suspicious_events.get(key, [])
+    events = [(time, bytes_sent) for time, bytes_sent in events if now - time <= SUSPICIOUS_WINDOW_SECONDS]
+    events.append((now, size))
+    suspicious_events[key] = events
+    count = len(events)
+    total = sum(bytes_sent for _, bytes_sent in events)
 
     # Detection logic
 
-    # High confidence: large + high entropy
-    if size > 100 and entropy > 4.5:
-        if not silent:
-            print("[red]ICMP Exfiltration Detected[/red]")
-
-    # Slow exfiltration: lots of small packets over time
-    elif data_volume[key] > 1000:
-        if not silent:
-            print(f"[yellow]High data transfer over ICMP from {src}[/yellow]")
-
-    # Suspicious payload (unknown encoding / randomness)
-    elif entropy > 4.5:
-        if not silent:
-            print("[yellow]High entropy ICMP payload[/yellow]")
+    # Escalate confidence only after repeated suspicious payloads.
+    if count >= 3 and total > 1000:
+        print(f"[bold red]ICMP HIGH[/bold red] potential exfiltration {src} -> {dst} | for repeated high-entropy data size={size} total={total} entropy={entropy:.2f} count={count} data={preview!r}")
+    elif count >= 3:
+        print(f"[yellow]ICMP MEDIUM[/yellow] potential exfiltration {src} -> {dst} | for repeated high-entropy payloads size={size} total={total} entropy={entropy:.2f} count={count} data={preview!r}")
+    elif large_payload:
+        print(f"[yellow]ICMP LOW[/yellow] suspicious payload {src} -> {dst} | for large high-entropy ping size={size} entropy={entropy:.2f} count={count} data={preview!r}")
 
 
-# -------------------------
-# Entropy calculation helper
-# -------------------------
 def calculate_entropy(data):
     if not data:
         return 0
