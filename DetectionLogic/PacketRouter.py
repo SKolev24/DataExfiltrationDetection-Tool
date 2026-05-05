@@ -4,6 +4,7 @@ from rich import console
 from scapy.layers.dns import DNS
 from scapy.layers.inet import IP, UDP, TCP, ICMP
 from scapy.utils import wrpcap
+from DetectionLogic.SpecificDetect.FTPrules import ftp_analysis_chain
 from DetectionLogic.SpecificDetect.ICMPRules import icmp_analysis_chain
 from DetectionLogic.SpecificDetect.DNSrules import dns_analysis_chain
 from scapy.utils import PcapReader
@@ -78,7 +79,11 @@ def process_packet(packet,arg_silent,arg_log, arg_import):
 
     if packet.haslayer(ICMP):
         icmp_analysis_chain(packet, arg_silent)
-        #--------------------- NEED HTTP AND FTB LOGIC HERE -----------------------------------
+
+
+    if packet.haslayer(TCP):
+        ftp_analysis_chain(packet, arg_silent, arg_log)
+        
 def file_analysis(pcap, arg_silent, arg_log , arg_import):
     for packet in PcapReader(pcap):
         process_packet(packet,arg_silent,arg_log, arg_import)
