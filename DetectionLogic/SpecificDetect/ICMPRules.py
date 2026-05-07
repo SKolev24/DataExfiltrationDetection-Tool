@@ -1,6 +1,6 @@
+from Util.Entropy import  calculate_entropy
 from scapy.layers.inet import ICMP, IP
 from rich import print
-import math
 
 # Tracks suspicious ICMP activity between source and destination
 SUSPICIOUS_WINDOW_SECONDS = 60
@@ -52,17 +52,4 @@ def icmp_analysis_chain(packet, silent):
         print(f"[yellow]ICMP LOW[/yellow] suspicious payload {src} -> {dst} | for large high-entropy ping size={size} entropy={entropy:.2f} count={count} data={preview!r}")
 
 
-def calculate_entropy(data):
-    if not data:
-        return 0
 
-    freq = {}
-    for byte in data:
-        freq[byte] = freq.get(byte, 0) + 1
-
-    entropy = 0
-    for count in freq.values():
-        p = count / len(data)
-        entropy -= p * math.log2(p)
-
-    return entropy
