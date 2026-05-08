@@ -75,13 +75,22 @@ def process_packet(packet,arg_silent,arg_log, arg_import):
         _print_packet_row(packet, pkt_type, src_endpoint, dst_endpoint, len(packet), domain)
 
     if packet.haslayer(DNS) and packet[DNS].qd and domain:
-        dns_analysis_chain(packet,domain)
+        try:
+            dns_analysis_chain(packet,domain)
+        except:
+            pass
 
     if packet.haslayer(ICMP):
-        icmp_analysis_chain(packet, arg_silent)
+        try:
+            icmp_analysis_chain(packet, arg_silent)
+        except:
+            pass
 
     if packet.haslayer(TCP):
-        ftp_analysis_chain(packet, arg_silent, arg_log)
+        try:
+            ftp_analysis_chain(packet, arg_silent, arg_log)
+        except:
+            pass
 
 def file_analysis(pcap, arg_silent, arg_log , arg_import):
     global is_file

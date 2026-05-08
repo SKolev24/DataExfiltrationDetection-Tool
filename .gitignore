@@ -4,3 +4,5 @@
 *.pyc
 *.pyc
 /DetectionLogic/__pycache__
+/DetectionLogic/SpecificDetect/__pycache__
+/Util/__pycache__

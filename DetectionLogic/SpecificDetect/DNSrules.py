@@ -1,7 +1,6 @@
 import os
 from rich import print, console
 import math
-from scapy.utils import wrpcap
 import time
 console = console.Console()
 _pcap = ""
