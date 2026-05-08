@@ -82,7 +82,7 @@ def process_packet(packet,arg_silent,arg_log, arg_import):
 
     if packet.haslayer(ICMP):
         try:
-            icmp_analysis_chain(packet, arg_silent)
+            icmp_analysis_chain(packet)
         except:
             pass
 

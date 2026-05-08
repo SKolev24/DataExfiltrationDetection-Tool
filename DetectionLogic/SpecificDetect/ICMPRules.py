@@ -8,12 +8,12 @@ ICMP_Storage = {}
 # Baseline thresholds for ICMP detection
 Entropy_Threshold = 4.5
 Large_Payload_Size = 100
-Repeated_Packets = 3
+Repeated_Packets = 8
 High_Total_Bytes = 1000
 Time_Window = 60
 
 
-def icmp_analysis_chain(packet, silent):
+def icmp_analysis_chain(packet):
 
 # Checks if packet is ICMP over IP
     if not packet.haslayer(ICMP) or not packet.haslayer(IP):
