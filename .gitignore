@@ -10,3 +10,4 @@ DetectionLogic/SpecificDetect/__pycache__/FTPrules.cpython-314.pyc
 DetectionLogic/SpecificDetect/__pycache__/ICMPRules.cpython-314.pyc
 Util/__pycache__/Entropy.cpython-314.pyc
 DetectionLogic/SpecificDetect/__pycache__/DNSrules.cpython-314.pyc
+*.pyc
