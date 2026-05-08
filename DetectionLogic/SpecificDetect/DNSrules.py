@@ -2,6 +2,8 @@ import os
 from rich import print, console
 import math
 import time
+import threading
+from Util import freqCalc
 console = console.Console()
 domain_freq = {}
 entropy = 0
@@ -30,25 +32,13 @@ def shannon_entropy(domain):
         entropy -= p_x * math.log2(p_x)
     return entropy
 
-def live_capture_frequency_calculation(base_domain):
-    current_time = time.time()
-    time_stamp = domain_freq[base_domain]
-    time_stamp.append(current_time)
-    cutoff = current_time - _seconds_window
-    new_list = []
-    i = 0
-    while i < len(time_stamp):
-        if time_stamp[i] >= cutoff:
-            new_list.append(time_stamp[i])
-        i = i + 1
-    domain_freq[base_domain] = new_list
-    return len(time_stamp)
-
 def pcap_analysis_frequency_calculation(base_domain, packet_time):
         if base_domain not in domain_freq:
             domain_freq[base_domain] = []
         domain_freq[base_domain].append(packet_time)
+        
         valid_times = []
+        
         for timestamp in domain_freq[base_domain]:
             if packet_time - timestamp <= _seconds_window:
                 valid_times.append(timestamp)
@@ -67,19 +57,15 @@ def dns_analyse(packet, domain):
     entropy = shannon_entropy(domain)
     length = len(domain)
 
-
-
-
     #Calculate Base Domain Frequency
     base = get_base_domain(domain)
 
     #Frequency Fix
     if is_file is True:
-        freq = pcap_analysis_frequency_calculation(base, packet.time)
-    else:
-        freq = live_capture_frequency_calculation(base)
-
-
+        pcap_analysis_frequency_calculation(base, packet.time)
+    else: 
+        freq = freqCalc(domain_freq, base, 5, 60)
+    
     #Assign confidence and flags
     if entropy >= 4.5:
         _e = True
@@ -89,7 +75,7 @@ def dns_analyse(packet, domain):
         _l = True
         confidence += 1
 
-    if freq > 5:
+    if freq:
         _f = True
         confidence += 1
 

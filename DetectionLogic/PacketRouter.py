@@ -11,6 +11,7 @@ is_file = None
 
 def process_packet(packet,arg_silent):
     domain = None
+    base_domain = None
     s_port = None
     d_port = None
     src = None
@@ -31,12 +32,14 @@ def process_packet(packet,arg_silent):
     if packet.haslayer(DNS) and packet[DNS].qd:
         try:
             domain = packet[DNS].qd.qname.decode("utf-8")
-            packettype = "DNS"       
+            packettype = "DNS"
+                   
         except:
             domain = None
+            
 
     if packettype and not arg_silent:
-        console.print(f"\nPACKET INFO: {packet},\n PACKET TYPE: {packettype},\n SOURCE ADDRESS: {src},\n SOURCE PORT: {s_port},\n DESTINATION ADDRESS: {dst},\n DESTINATION PORT: {d_port}, \n LENGTH: {len(packet)},\n DOMAIN: {domain},")
+        console.print(f"\nPACKET INFO: {packet},\n PACKET TYPE: {packettype},\n SOURCE ADDRESS: {src},\n SOURCE PORT: {s_port},\n DESTINATION ADDRESS: {dst},\n DESTINATION PORT: {d_port}, \n LENGTH: {len(packet)},\n DOMAIN: {domain}")
 
     if packet.haslayer(DNS) and packet[DNS].qd and domain:
         try:
