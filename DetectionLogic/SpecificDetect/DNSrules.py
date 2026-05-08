@@ -3,19 +3,14 @@ from rich import print, console
 import math
 import time
 console = console.Console()
-_pcap = ""
 domain_freq = {}
-
 entropy = 0
 length = 0
 freq = 0
-
 _e = False
 _l = False
 _f = False
-
 confidence = 0
-
 _seconds_window = 300
 
 
@@ -39,13 +34,14 @@ def live_capture_frequency_calculation(base_domain):
     current_time = time.time()
     time_stamp = domain_freq[base_domain]
     time_stamp.append(current_time)
-    while len(time_stamp) > 0:
-        oldest_time = time_stamp[0]
-
-        if current_time - oldest_time > _seconds_window:
-            time_stamp.popleft()
-        else:
-            break
+    cutoff = current_time - _seconds_window
+    new_list = []
+    i = 0
+    while i < len(time_stamp):
+        if time_stamp[i] >= cutoff:
+            new_list.append(time_stamp[i])
+        i = i + 1
+    domain_freq[base_domain] = new_list
     return len(time_stamp)
 
 def pcap_analysis_frequency_calculation(base_domain, packet_time):
@@ -121,13 +117,15 @@ def verdict(packet, domain, confidence, entropy, length, freq):
     if confidence == 2 and _e:
         message = f"[yellow]ALERT DNS[/yellow] likely threat {display_domain} | entropy={_e_mes} length={_l_mes} freq={_f_mes}"
         print(message)
+        return packet
       
 
     elif confidence == 3 and _e:
         message = f"[bold red]ALERT DNS[/bold red] threat discovered {display_domain} | entropy={_e_mes} length={_l_mes} freq={_f_mes}"
         print(message)
-       
+        return packet
+    return packet
 
 def dns_analysis_chain(packet, domain):
     global _pcap, _arg_log
-    dns_analyse(packet, domain)
+    return dns_analyse(packet, domain)
