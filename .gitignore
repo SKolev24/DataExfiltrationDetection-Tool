@@ -1,2 +1,6 @@
 /.idea
 /.vs
+*.pyc
+*.pyc
+*.pyc
+/DetectionLogic/__pycache__

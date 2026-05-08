@@ -14,7 +14,7 @@ _timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 _timestamp = _timestamp.replace(":", ".")
 logDIR = f"logs/{_timestamp}"
 pcap_file = f"{logDIR}/packet.pcap"
-
+is_file = False
 
 def _format_endpoint(address, port):
     if not address:
@@ -75,7 +75,7 @@ def process_packet(packet,arg_silent,arg_log, arg_import):
         _print_packet_row(packet, pkt_type, src_endpoint, dst_endpoint, len(packet), domain)
 
     if packet.haslayer(DNS) and packet[DNS].qd and domain:
-        dns_analysis_chain(packet,domain,arg_log)
+        dns_analysis_chain(packet,domain)
 
     if packet.haslayer(ICMP):
         icmp_analysis_chain(packet, arg_silent)
@@ -85,6 +85,8 @@ def process_packet(packet,arg_silent,arg_log, arg_import):
         ftp_analysis_chain(packet, arg_silent, arg_log)
         
 def file_analysis(pcap, arg_silent, arg_log , arg_import):
+    global is_file
+    is_file = True
     for packet in PcapReader(pcap):
         process_packet(packet,arg_silent,arg_log, arg_import)
 
