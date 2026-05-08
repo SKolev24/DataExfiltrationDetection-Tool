@@ -80,10 +80,9 @@ def process_packet(packet,arg_silent,arg_log, arg_import):
     if packet.haslayer(ICMP):
         icmp_analysis_chain(packet, arg_silent)
 
-
     if packet.haslayer(TCP):
         ftp_analysis_chain(packet, arg_silent, arg_log)
-        
+
 def file_analysis(pcap, arg_silent, arg_log , arg_import):
     global is_file
     is_file = True
