@@ -13,8 +13,6 @@ _e = False
 _l = False
 _f = False
 confidence = 0
-_seconds_window = 300
-
 
 #Splitting the domain to get the base domain
 def get_base_domain(domain):
@@ -32,19 +30,15 @@ def shannon_entropy(domain):
         entropy -= p_x * math.log2(p_x)
     return entropy
 
-def pcap_analysis_frequency_calculation(base_domain, packet_time):
-        if base_domain not in domain_freq:
-            domain_freq[base_domain] = []
-        domain_freq[base_domain].append(packet_time)
-        
-        valid_times = []
-        
-        for timestamp in domain_freq[base_domain]:
-            if packet_time - timestamp <= _seconds_window:
-                valid_times.append(timestamp)
+def pcap_analysis_frequency_calculation(base_domain):
+        global domain_freq
 
-        domain_freq[base_domain] = valid_times
-        return len(valid_times)
+        if base_domain not in domain_freq:
+            domain_freq[base_domain] = 1
+        else:
+            domain_freq[base_domain] += 1
+
+        return domain_freq[base_domain]
 
 def dns_analyse(packet, domain):
     from DetectionLogic.PacketRouter import is_file
@@ -52,6 +46,7 @@ def dns_analyse(packet, domain):
     global domain_freq, confidence, _e, _l, _f,entropy, length, freq
     _e,_l,_f = False,False,False
     confidence = 0
+    freq = False
 
     #Assign all values to according list elements
     entropy = shannon_entropy(domain)
@@ -62,7 +57,7 @@ def dns_analyse(packet, domain):
 
     #Frequency Fix
     if is_file is True:
-        pcap_analysis_frequency_calculation(base, packet.time)
+        freq = pcap_analysis_frequency_calculation(base)
     else: 
         freq = freqCalc(domain_freq, base, 5, 60)
     
@@ -75,7 +70,7 @@ def dns_analyse(packet, domain):
         _l = True
         confidence += 1
 
-    if freq:
+    if freq >= 5:
         _f = True
         confidence += 1
 

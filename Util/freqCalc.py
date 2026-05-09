@@ -33,5 +33,5 @@ def freqCalc(freqlist, item, countMax, clearTime):
         print(freqlist)
         caught = catchFreqforExil(freqlist[item],countMax)
     print(f"caught: {caught}")
-    return caught
+    return freqlist[item]
 
