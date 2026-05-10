@@ -15,8 +15,8 @@ def icmp_analysis_chain(packet, is_file):
     if not packet.haslayer(ICMP) or not packet.haslayer(IP):
         return
 
-# Only checks ICMP echo requests
-    if packet[ICMP].type != 8:
+# Only checks ICMP echo requests and replies
+    if packet[ICMP].type not in (0, 8):
         return
 
     src_ip = packet[IP].src
@@ -27,9 +27,12 @@ def icmp_analysis_chain(packet, is_file):
     packet_time = float(packet.time)
     key = (src_ip, dst_ip)
 
-# Ignore normal low entropy ICMP traffic
-    if entropy_value <= entropy_threshold:
+# Ignore ICMP packets with no payload data
+    if payload_size == 0:
         return
+
+    high_entropy = entropy_value > entropy_threshold
+    large_payload = payload_size > large_payload_size
 
 # Initial preset
     if key not in icmp_storage:
@@ -57,10 +60,10 @@ def icmp_analysis_chain(packet, is_file):
 
 # Confidence level checks
     if packet_count >= repeated_packets and total_bytes > high_volume_threshold:
-        print(f"[bold red]ICMP HIGH[/bold red] potential exfiltration {src_ip} -> {dst_ip} | for repeated high-entropy data size={payload_size} total={total_bytes} entropy={entropy_value:.2f} count={packet_count} data={preview!r}")
+        print(f"[bold red]ICMP HIGH[/bold red] potential exfiltration {src_ip} -> {dst_ip} | for repeated ICMP payload data size={payload_size} total={total_bytes} entropy={entropy_value:.2f} count={packet_count} data={preview!r}")
 
     elif packet_count >= repeated_packets:
-        print(f"[yellow]ICMP MEDIUM[/yellow] potential exfiltration {src_ip} -> {dst_ip} | for repeated high-entropy payloads size={payload_size} total={total_bytes} entropy={entropy_value:.2f} count={packet_count} data={preview!r}")
+        print(f"[yellow]ICMP MEDIUM[/yellow] potential exfiltration {src_ip} -> {dst_ip} | for repeated ICMP payloads size={payload_size} total={total_bytes} entropy={entropy_value:.2f} count={packet_count} data={preview!r}")
 
-    elif payload_size > large_payload_size:
-        print(f"[yellow]ICMP LOW[/yellow] suspicious payload {src_ip} -> {dst_ip} | for large high-entropy ping size={payload_size} entropy={entropy_value:.2f} count={packet_count} data={preview!r}")
+    elif large_payload or high_entropy:
+        print(f"[yellow]ICMP LOW[/yellow] suspicious payload {src_ip} -> {dst_ip} | for large or high-entropy ICMP payload size={payload_size} entropy={entropy_value:.2f} count={packet_count} data={preview!r}")

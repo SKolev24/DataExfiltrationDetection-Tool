@@ -1,6 +1,9 @@
 import math
 
 def calculate_entropy(data):
+    if not data:
+        return 0
+
     entropy = 0
     freq = {}
 

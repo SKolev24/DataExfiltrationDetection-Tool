@@ -11,6 +11,7 @@ is_file = False
 
 def process_packet(packet,arg_silent):
     domain = None
+    payload = None
     s_port = None
     d_port = None
     src = None
@@ -28,16 +29,21 @@ def process_packet(packet,arg_silent):
         packettype = "TCP"
         s_port = packet[TCP].sport
         d_port = packet[TCP].dport
+    elif packet.haslayer(ICMP):
+        packettype = "ICMP"
     if packet.haslayer(DNS) and packet[DNS].qd:
         try:
             domain = packet[DNS].qd.qname.decode("utf-8")
             packettype = "DNS"
         except:
             domain = None
+
+    if packet.haslayer(ICMP) and packet.haslayer("Raw"):
+        payload = packet["Raw"].load[:80].decode("utf-8", errors="replace")
             
 
     if packettype and not arg_silent:
-        console.print(f"\nPACKET INFO: {packet},\n PACKET TYPE: {packettype},\n SOURCE ADDRESS: {src},\n SOURCE PORT: {s_port},\n DESTINATION ADDRESS: {dst},\n DESTINATION PORT: {d_port}, \n LENGTH: {len(packet)},\n DOMAIN: {domain}")
+        console.print(f"\nPACKET INFO: {packet},\n PACKET TYPE: {packettype},\n SOURCE ADDRESS: {src},\n SOURCE PORT: {s_port},\n DESTINATION ADDRESS: {dst},\n DESTINATION PORT: {d_port}, \n LENGTH: {len(packet)},\n DOMAIN: {domain},\n PAYLOAD: {payload}")
 
     if packet.haslayer(DNS) and packet[DNS].qd and domain:
         try:
@@ -58,6 +64,8 @@ def process_packet(packet,arg_silent):
             pass
 
 def file_analysis(pcap, arg_silent):
+    global is_file
+    is_file = True
     for packet in PcapReader(pcap):
         process_packet(packet,arg_silent)
 
