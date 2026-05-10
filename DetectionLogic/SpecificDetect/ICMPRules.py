@@ -9,7 +9,7 @@ repeated_packets = 8
 high_volume_threshold = 1000
 time_window = 60
 
-def icmp_analysis_chain(packet):
+def icmp_analysis_chain(packet, is_file):
 
 # Checks if packet is ICMP over IP
     if not packet.haslayer(ICMP) or not packet.haslayer(IP):
@@ -40,7 +40,7 @@ def icmp_analysis_chain(packet):
         }
 
 # Reset counters when the packet is outside the time window
-    if packet_time - icmp_storage[key]["start_time"] > time_window:
+    if not is_file and packet_time - icmp_storage[key]["start_time"] > time_window:
         icmp_storage[key] = {
             "start_time": packet_time,
             "packets": 0,
