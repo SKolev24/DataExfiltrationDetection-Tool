@@ -2,18 +2,14 @@ from Util.Entropy import calculate_entropy
 from scapy.layers.inet import ICMP, IP
 from rich import print
 
+icmp_storage = {}
+entropy_threshold = 4.5
+large_payload_size = 100
+repeated_packets = 8
+high_volume_threshold = 1000
+time_window = 60
 
-ICMP_Storage = {}
-
-# Baseline thresholds for ICMP detection
-Entropy_Threshold = 4.5
-Large_Payload_Size = 100
-Repeated_Packets = 8
-High_Total_Bytes = 1000
-Time_Window = 60
-
-
-def icmp_analysis_chain(packet):
+def icmp_analysis_chain(packet, is_file):
 
 # Checks if packet is ICMP over IP
     if not packet.haslayer(ICMP) or not packet.haslayer(IP):
@@ -32,39 +28,39 @@ def icmp_analysis_chain(packet):
     key = (src_ip, dst_ip)
 
 # Ignore normal low entropy ICMP traffic
-    if entropy_value <= Entropy_Threshold:
+    if entropy_value <= entropy_threshold:
         return
 
-# Initial ICMP_Storage preset
-    if key not in ICMP_Storage:
-        ICMP_Storage[key] = {
+# Initial preset
+    if key not in icmp_storage:
+        icmp_storage[key] = {
             "start_time": packet_time,
             "packets": 0,
             "bytes": 0
         }
 
 # Reset counters when the packet is outside the time window
-    if packet_time - ICMP_Storage[key]["start_time"] > Time_Window:
-        ICMP_Storage[key] = {
+    if not is_file and packet_time - icmp_storage[key]["start_time"] > time_window:
+        icmp_storage[key] = {
             "start_time": packet_time,
             "packets": 0,
             "bytes": 0
         }
 
 # Update suspicious ICMP stats
-    ICMP_Storage[key]["packets"] += 1
-    ICMP_Storage[key]["bytes"] += payload_size
+    icmp_storage[key]["packets"] += 1
+    icmp_storage[key]["bytes"] += payload_size
 
-    packet_count = ICMP_Storage[key]["packets"]
-    total_bytes = ICMP_Storage[key]["bytes"]
-    preview = payload[:40].decode("utf-8", errors="replace") if payload else "-"
+    packet_count = icmp_storage[key]["packets"]
+    total_bytes = icmp_storage[key]["bytes"]
+    preview = payload[:40].decode("utf-8", errors="replace")
 
 # Confidence level checks
-    if packet_count >= Repeated_Packets and total_bytes > High_Total_Bytes:
+    if packet_count >= repeated_packets and total_bytes > high_volume_threshold:
         print(f"[bold red]ICMP HIGH[/bold red] potential exfiltration {src_ip} -> {dst_ip} | for repeated high-entropy data size={payload_size} total={total_bytes} entropy={entropy_value:.2f} count={packet_count} data={preview!r}")
 
-    elif packet_count >= Repeated_Packets:
+    elif packet_count >= repeated_packets:
         print(f"[yellow]ICMP MEDIUM[/yellow] potential exfiltration {src_ip} -> {dst_ip} | for repeated high-entropy payloads size={payload_size} total={total_bytes} entropy={entropy_value:.2f} count={packet_count} data={preview!r}")
 
-    elif payload_size > Large_Payload_Size:
+    elif payload_size > large_payload_size:
         print(f"[yellow]ICMP LOW[/yellow] suspicious payload {src_ip} -> {dst_ip} | for large high-entropy ping size={payload_size} entropy={entropy_value:.2f} count={packet_count} data={preview!r}")

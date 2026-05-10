@@ -7,7 +7,7 @@ from DetectionLogic.SpecificDetect.DNSrules import dns_analysis_chain
 from scapy.utils import PcapReader
 
 console = console.Console()
-is_file = None
+is_file = False
 
 def process_packet(packet,arg_silent):
     domain = None
@@ -47,7 +47,7 @@ def process_packet(packet,arg_silent):
 
     if packet.haslayer(ICMP):
         try:
-            icmp_analysis_chain(packet)
+            icmp_analysis_chain(packet, is_file)
         except:
             pass
 

@@ -36,13 +36,17 @@ def ftp_analysis_chain(packet):
 # Initial FTP_Storage preset
     if src_ip not in FTP_Storage:
         FTP_Storage[src_ip] = {
-            "sessions": 0,
+            "sessions": set(),
             "bytes": 0,
             "last_seen": None
         }
 
+
+
 # Update session stats
-    FTP_Storage[src_ip]["sessions"] += 1
+    session_id = f"{src_ip}:{src_port}->{dst_ip}:{dst_port}"
+
+    FTP_Storage[src_ip]["sessions"].add(session_id)
     FTP_Storage[src_ip]["bytes"] += len(packet)
     FTP_Storage[src_ip]["last_seen"] = datetime.datetime.now()
 
@@ -56,8 +60,6 @@ def ftp_analysis_chain(packet):
     currentTime = datetime.datetime.now()
 
 # Command detection
-
-
     if packet.haslayer("Raw"):
         try:
             ftp_payload = packet["Raw"].load.decode("utf-8", errors="ignore")
@@ -67,8 +69,6 @@ def ftp_analysis_chain(packet):
             ftp_payload_upper = ""
 
 # Entropy Detection (Extracting File Name)
-
-
     if "STOR" in ftp_payload_upper or "APPE" in ftp_payload_upper:
         parts = ftp_payload_upper.split()
 
@@ -99,7 +99,7 @@ def ftp_analysis_chain(packet):
         ALERT.append(f"[yellow]ALERT FTP[/yellow] likely threat Compressed file transfer detected")
 
 # Detection logic
-    if FTP_Storage[src_ip]["sessions"] > Max_Sessions:
+    if len(FTP_Storage[src_ip]["sessions"]) > Max_Sessions:
         risk_score += 3
         ALERT.append(f"[yellow]ALERT FTP[/yellow] likely threat High FTP traffic detected")
 
@@ -111,10 +111,6 @@ def ftp_analysis_chain(packet):
         risk_score += 3
         ALERT.append(f"[yellow]ALERT FTP[/yellow] likely threat Off-hours FTP activity detected")
 
-    if FTP_Storage[src_ip]["sessions"] > 1:
-        risk_score += 1
-        ALERT.append(f"[yellow]ALERT FTP[/yellow] likely threat Repeated connections detected")
-
 # Entropy Detection
     if filename:
         entropy_value = calculate_entropy(filename)
@@ -122,7 +118,7 @@ def ftp_analysis_chain(packet):
             risk_score += 4
             ALERT.append(f"[bold red] High entropy [/bold red] filename detected ({filename})")
 
-# Alert if risk score exceeds threshold
+# Alert if risk_score exceeds the threshold
     if risk_score > 5:
         print(f"\n[bold red] Possible FTP Data Exfiltration Detected [/bold red]")
         print(f"Source IP: {src_ip}")
