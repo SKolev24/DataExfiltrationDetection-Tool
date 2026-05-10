@@ -14,7 +14,7 @@ OFF_Hours_Start = 0
 OFF_Hours_End = 6
 
 
-def ftp_analysis_chain(packet, arg_silent, arg_log):
+def ftp_analysis_chain(packet):
 
 # Checks if Packet is using TCP as FTP uses TCP Protocal
     if not packet.haslayer(TCP):

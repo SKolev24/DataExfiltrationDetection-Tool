@@ -1,24 +1,18 @@
 import os
 from rich import print, console
 import math
-from scapy.utils import wrpcap
-
-_arg_log = False
-
+import time
+import threading
+from Util import freqCalc
 console = console.Console()
-_pcap = ""
 domain_freq = {}
-
 entropy = 0
 length = 0
 freq = 0
-
 _e = False
 _l = False
 _f = False
-
 confidence = 0
-
 
 #Splitting the domain to get the base domain
 def get_base_domain(domain):
@@ -36,12 +30,23 @@ def shannon_entropy(domain):
         entropy -= p_x * math.log2(p_x)
     return entropy
 
-def dns_analyse(packet, domain):
+def pcap_analysis_frequency_calculation(base_domain):
+        global domain_freq
 
+        if base_domain not in domain_freq:
+            domain_freq[base_domain] = 1
+        else:
+            domain_freq[base_domain] += 1
+
+        return domain_freq[base_domain]
+
+def dns_analyse(packet, domain):
+    from DetectionLogic.PacketRouter import is_file
     #Default Definitions
     global domain_freq, confidence, _e, _l, _f,entropy, length, freq
     _e,_l,_f = False,False,False
     confidence = 0
+    freq = False
 
     #Assign all values to according list elements
     entropy = shannon_entropy(domain)
@@ -49,21 +54,23 @@ def dns_analyse(packet, domain):
 
     #Calculate Base Domain Frequency
     base = get_base_domain(domain)
-    if base not in domain_freq:
-        domain_freq[base] = 0
-    domain_freq[base] += 1
-    freq = domain_freq[base]
 
+    #Frequency Fix
+    if is_file is True:
+        freq = pcap_analysis_frequency_calculation(base)
+    else: 
+        freq = freqCalc(domain_freq, base, 5, 60)
+    
     #Assign confidence and flags
     if entropy >= 4.5:
         _e = True
         confidence += 1
 
-    if length >= 135:
+    if length >= 70:
         _l = True
         confidence += 1
 
-    if freq > 5:
+    if freq >= 5:
         _f = True
         confidence += 1
 
@@ -72,13 +79,12 @@ def dns_analyse(packet, domain):
 
 
 def verdict(packet, domain, confidence, entropy, length, freq):
-    from DetectionLogic.PacketRouter import logDIR
+  
     #Default variable assignment
-    global _l, _e, _f, _arg_log
+    global _l, _e, _f
     _e_mes = f"[bold white]{entropy:.2f}[/bold white]"
     _l_mes = f"[bold white]{length}[/bold white]"
     _f_mes = f"[bold white]{freq}[/bold white]"
-
     if _e:
         _e_mes = f"[bold red]{entropy:.2f}[/bold red]"
     if _l:
@@ -92,18 +98,15 @@ def verdict(packet, domain, confidence, entropy, length, freq):
     if confidence == 2 and _e:
         message = f"[yellow]ALERT DNS[/yellow] likely threat {display_domain} | entropy={_e_mes} length={_l_mes} freq={_f_mes}"
         print(message)
-        if _arg_log:
-            os.makedirs(logDIR, exist_ok=True)
-            wrpcap(f"{logDIR}/DNS_RESULT_packet.pcap", packet, append=True)
+        return packet
+      
 
     elif confidence == 3 and _e:
         message = f"[bold red]ALERT DNS[/bold red] threat discovered {display_domain} | entropy={_e_mes} length={_l_mes} freq={_f_mes}"
         print(message)
-        if _arg_log:
-            os.makedirs(logDIR, exist_ok=True)
-            wrpcap(f"{logDIR}/DNS_RESULT_packet.pcap", packet, append=True)
+        return packet
+    return packet
 
-def dns_analysis_chain(packet, domain, arg_log):
+def dns_analysis_chain(packet, domain):
     global _pcap, _arg_log
-    _arg_log = arg_log
-    dns_analyse(packet, domain)
+    return dns_analyse(packet, domain)
