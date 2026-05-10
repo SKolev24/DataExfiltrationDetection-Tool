@@ -1,9 +1,5 @@
-import os
 from rich import print, console
 import math
-import time
-import threading
-from Util import freqCalc
 console = console.Console()
 domain_freq = {}
 entropy = 0
@@ -30,7 +26,7 @@ def shannon_entropy(domain):
         entropy -= p_x * math.log2(p_x)
     return entropy
 
-def pcap_analysis_frequency_calculation(base_domain):
+def frequency_calculation(base_domain):
         global domain_freq
 
         if base_domain not in domain_freq:
@@ -41,7 +37,6 @@ def pcap_analysis_frequency_calculation(base_domain):
         return domain_freq[base_domain]
 
 def dns_analyse(packet, domain):
-    from DetectionLogic.PacketRouter import is_file
     #Default Definitions
     global domain_freq, confidence, _e, _l, _f,entropy, length, freq
     _e,_l,_f = False,False,False
@@ -56,13 +51,10 @@ def dns_analyse(packet, domain):
     base = get_base_domain(domain)
 
     #Frequency Fix
-    if is_file is True:
-        freq = pcap_analysis_frequency_calculation(base)
-    else: 
-        freq = freqCalc(domain_freq, base, 5, 60)
-    
+    freq = frequency_calculation(base)
+   
     #Assign confidence and flags
-    if entropy >= 4.5:
+    if entropy >= 4.2:
         _e = True
         confidence += 1
 
@@ -108,5 +100,4 @@ def verdict(packet, domain, confidence, entropy, length, freq):
     return packet
 
 def dns_analysis_chain(packet, domain):
-    global _pcap, _arg_log
     return dns_analyse(packet, domain)

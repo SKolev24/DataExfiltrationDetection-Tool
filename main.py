@@ -43,7 +43,6 @@ if __name__ == "__main__":
         sniff_packet(chosenInterface,args.silent)
 
     if args.import_pcap:
-        arg_imp = True
         from DetectionLogic.PacketRouter import file_analysis
         file_analysis(args.import_pcap,args.silent)
 

@@ -11,7 +11,6 @@ is_file = None
 
 def process_packet(packet,arg_silent):
     domain = None
-    base_domain = None
     s_port = None
     d_port = None
     src = None
@@ -33,7 +32,6 @@ def process_packet(packet,arg_silent):
         try:
             domain = packet[DNS].qd.qname.decode("utf-8")
             packettype = "DNS"
-                   
         except:
             domain = None
             
@@ -60,8 +58,6 @@ def process_packet(packet,arg_silent):
             pass
 
 def file_analysis(pcap, arg_silent):
-    global is_file
-    is_file = True
     for packet in PcapReader(pcap):
         process_packet(packet,arg_silent)
 
