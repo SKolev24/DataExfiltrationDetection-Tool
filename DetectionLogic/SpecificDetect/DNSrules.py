@@ -55,7 +55,7 @@ def dns_analyse(packet, domain):
     freq = frequency_calculation(base)
    
     #Assign confidence and flags
-    if entropy >= 4.2:
+    if entropy >= 4.5:
         _e = True
         confidence += 1
 
