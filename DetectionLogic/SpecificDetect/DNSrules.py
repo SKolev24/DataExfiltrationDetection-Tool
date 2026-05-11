@@ -9,7 +9,7 @@ _e = False
 _l = False
 _f = False
 confidence = 0
-
+malicious_URL = {}
 #Splitting the domain to get the base domain
 def get_base_domain(domain):
     parts = domain.strip(".").split(".")
@@ -19,7 +19,7 @@ def get_base_domain(domain):
 
 #Entropy level calculation
 def shannon_entropy(domain):
-    domain = ".".join(part for part in domain.split(".") if part)
+    domain = "".join(part for part in domain.split("."))
     entropy = 0
     for c in set(domain):
         p_x = domain.count(c) / len(domain)
@@ -39,9 +39,10 @@ def frequency_calculation(base_domain):
 def dns_analyse(packet, domain):
     #Default Definitions
     global domain_freq, confidence, _e, _l, _f,entropy, length, freq
+    
     _e,_l,_f = False,False,False
     confidence = 0
-    freq = False
+  
 
     #Assign all values to according list elements
     entropy = shannon_entropy(domain)
@@ -54,7 +55,7 @@ def dns_analyse(packet, domain):
     freq = frequency_calculation(base)
    
     #Assign confidence and flags
-    if entropy >= 4.5:
+    if entropy >= 4.2:
         _e = True
         confidence += 1
 
@@ -67,13 +68,14 @@ def dns_analyse(packet, domain):
         confidence += 1
 
     #Call to get result
-    verdict(packet, domain, confidence,entropy, length, freq)
+    verdict(packet, domain, confidence,entropy, length, freq, base)
 
 
-def verdict(packet, domain, confidence, entropy, length, freq):
+def verdict(packet, domain, confidence, entropy, length, freq, base):
   
     #Default variable assignment
-    global _l, _e, _f
+    global _l, _e, _f 
+    value =0
     _e_mes = f"[bold white]{entropy:.2f}[/bold white]"
     _l_mes = f"[bold white]{length}[/bold white]"
     _f_mes = f"[bold white]{freq}[/bold white]"
@@ -83,20 +85,26 @@ def verdict(packet, domain, confidence, entropy, length, freq):
         _l_mes = f"[bold red]{length}[/bold red]"
     if _f:
         _f_mes = f"[bold red]{freq}[/bold red]"
-
     display_domain = f"[bold red]{domain}[/bold red]"
 
     #Printing Results
     if confidence == 2 and _e:
         message = f"[yellow]ALERT DNS[/yellow] likely threat {display_domain} | entropy={_e_mes} length={_l_mes} freq={_f_mes}"
+        malicious_URL[base] = domain_freq[base]
+        for key in malicious_URL:
+             value += malicious_URL[key]
+        print("Total Alerts: " + str(value))
         print(message)
         return packet
-      
-
     elif confidence == 3 and _e:
         message = f"[bold red]ALERT DNS[/bold red] threat discovered {display_domain} | entropy={_e_mes} length={_l_mes} freq={_f_mes}"
+        malicious_URL[base] = domain_freq[base]
+        for key in malicious_URL:
+            value += malicious_URL[key]
+        print("Total Alerts: " + str(value))
         print(message)
         return packet
+    
     return packet
 
 def dns_analysis_chain(packet, domain):
