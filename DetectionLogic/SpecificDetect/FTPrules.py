@@ -44,10 +44,14 @@ def ftp_analysis_chain(packet):
 
 
 # Update session stats
+    # creates a unique session id
     session_id = f"{src_ip}:{src_port}->{dst_ip}:{dst_port}"
 
+    # stores session id in FTP_Storage
     FTP_Storage[src_ip]["sessions"].add(session_id)
+    # Increments the number of bytes transferred
     FTP_Storage[src_ip]["bytes"] += len(packet)
+    # Updates the last_seen timestamp
     FTP_Storage[src_ip]["last_seen"] = datetime.datetime.now()
 
 
@@ -72,6 +76,7 @@ def ftp_analysis_chain(packet):
     if "STOR" in ftp_payload_upper or "APPE" in ftp_payload_upper:
         parts = ftp_payload_upper.split()
 
+        # retrieve second element (file name)
         if len(parts) > 1:
             filename = parts[1]
 
